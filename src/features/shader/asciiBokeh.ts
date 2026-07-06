@@ -7,6 +7,7 @@ export const SCENE_LAYOUT = {
     height: 1440,
     cellWidth: 12,
     cellHeight: 16,
+    scaleSofteningExponent: 0.5,
 } as const;
 
 const BOKEH_TOKEN_NAMES = [

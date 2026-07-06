@@ -1,6 +1,12 @@
 import { SCENE_LAYOUT } from './asciiBokeh';
 
-const { width: sceneWidth, height: sceneHeight, cellWidth, cellHeight } = SCENE_LAYOUT;
+const {
+    width: sceneWidth,
+    height: sceneHeight,
+    cellWidth,
+    cellHeight,
+    scaleSofteningExponent,
+} = SCENE_LAYOUT;
 
 export const VERTEX_SHADER = /* glsl */ `
 attribute vec2 a_position;
@@ -29,6 +35,7 @@ uniform sampler2D u_glyphAtlas;
 
 const vec2 SCENE_SIZE = vec2(${sceneWidth}.0, ${sceneHeight}.0);
 const vec2 CELL_SIZE = vec2(${cellWidth}.0, ${cellHeight}.0);
+const float SCALE_SOFTEN_EXPONENT = ${scaleSofteningExponent};
 const float TIME_SCALE = 0.32;
 const float BLOB_SPREAD = 0.038;
 const float BG_DIM = 0.92;
@@ -45,8 +52,9 @@ vec3 contrastColor(vec3 c, float amount) {
 vec2 mapToSceneCoord(vec2 fragCoord) {
     vec2 viewportScale = u_resolution / SCENE_SIZE;
     float coverScale = max(viewportScale.x, viewportScale.y);
-    vec2 centeredOffset = (SCENE_SIZE * coverScale - u_resolution) * 0.5;
-    return (fragCoord + centeredOffset) / coverScale;
+    float uniformScale = pow(coverScale, SCALE_SOFTEN_EXPONENT);
+    vec2 centeredOffset = (SCENE_SIZE * uniformScale - u_resolution) * 0.5;
+    return (fragCoord + centeredOffset) / uniformScale;
 }
 
 float bokehIntensity(vec2 p, float t) {
