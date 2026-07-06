@@ -194,8 +194,6 @@ export const createAsciiBokehRenderer = (
             cssHeight = height;
             canvas.width = Math.floor(width * dpr);
             canvas.height = Math.floor(height * dpr);
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
             gl.viewport(0, 0, canvas.width, canvas.height);
             gl.uniform2f(uniforms.resolution, width, height);
             gl.uniform1f(uniforms.dpr, dpr);

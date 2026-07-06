@@ -3,6 +3,23 @@ import { createAsciiBokehRenderer } from './asciiBokehWebGL';
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const MAX_DPR = 2;
+const BOOTSTRAP_FRAME_COUNT = 12;
+
+interface CanvasSize {
+    width: number;
+    height: number;
+}
+
+const readCanvasSize = (canvas: HTMLCanvasElement): CanvasSize => {
+    const { width: rectWidth, height: rectHeight } = canvas.getBoundingClientRect();
+    const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+
+    return {
+        width: Math.round(Math.max(rectWidth, viewportWidth)),
+        height: Math.round(Math.max(rectHeight, viewportHeight)),
+    };
+};
 
 export const useAsciiBokeh = (canvasRef: RefObject<HTMLCanvasElement | null>): void => {
     const frameRef = useRef<number>(0);
@@ -19,13 +36,21 @@ export const useAsciiBokeh = (canvasRef: RefObject<HTMLCanvasElement | null>): v
         let running = true;
         let animating = false;
         let start = performance.now();
+        let bootstrapFrames = BOOTSTRAP_FRAME_COUNT;
+        let lastWidth = 0;
+        let lastHeight = 0;
         const motionQuery = window.matchMedia(REDUCED_MOTION_QUERY);
         let reducedMotion = motionQuery.matches;
 
         const resize = () => {
-            const { width, height } = canvas.getBoundingClientRect();
+            const { width, height } = readCanvasSize(canvas);
 
             if (width === 0 || height === 0) return;
+
+            if (width === lastWidth && height === lastHeight) return;
+
+            lastWidth = width;
+            lastHeight = height;
 
             const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
             renderer.resize(width, height, dpr);
@@ -33,6 +58,11 @@ export const useAsciiBokeh = (canvasRef: RefObject<HTMLCanvasElement | null>): v
 
         const draw = (now: number) => {
             if (!running) return;
+
+            if (bootstrapFrames > 0) {
+                bootstrapFrames -= 1;
+                resize();
+            }
 
             renderer.draw(reducedMotion ? 0 : (now - start) / 1000);
 
@@ -53,6 +83,7 @@ export const useAsciiBokeh = (canvasRef: RefObject<HTMLCanvasElement | null>): v
 
             animating = true;
             start = performance.now();
+            bootstrapFrames = BOOTSTRAP_FRAME_COUNT;
             frameRef.current = requestAnimationFrame(draw);
         };
 
@@ -65,6 +96,8 @@ export const useAsciiBokeh = (canvasRef: RefObject<HTMLCanvasElement | null>): v
             if (document.hidden) {
                 stopLoop();
             } else {
+                bootstrapFrames = BOOTSTRAP_FRAME_COUNT;
+                resize();
                 startLoop();
             }
         };
@@ -75,11 +108,23 @@ export const useAsciiBokeh = (canvasRef: RefObject<HTMLCanvasElement | null>): v
             startLoop();
         };
 
-        resize();
-        startLoop();
+        const scheduleInitialResize = () => {
+            requestAnimationFrame(() => {
+                resize();
+
+                requestAnimationFrame(() => {
+                    resize();
+                    startLoop();
+                });
+            });
+        };
+
+        scheduleInitialResize();
 
         const observer = new ResizeObserver(resize);
         observer.observe(canvas);
+        window.addEventListener('resize', resize);
+        window.visualViewport?.addEventListener('resize', resize);
         document.addEventListener('visibilitychange', onVisibility);
         motionQuery.addEventListener('change', onMotionPreference);
 
@@ -87,6 +132,8 @@ export const useAsciiBokeh = (canvasRef: RefObject<HTMLCanvasElement | null>): v
             running = false;
             stopLoop();
             observer.disconnect();
+            window.removeEventListener('resize', resize);
+            window.visualViewport?.removeEventListener('resize', resize);
             document.removeEventListener('visibilitychange', onVisibility);
             motionQuery.removeEventListener('change', onMotionPreference);
             renderer.destroy();
