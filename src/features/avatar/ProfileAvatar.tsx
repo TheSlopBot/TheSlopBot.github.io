@@ -1,18 +1,13 @@
-import type { CSSProperties } from 'react';
+import { GITHUB_PROFILE_URL } from '../../constants/links';
 import './ProfileAvatar.css';
 
-interface ProfileAvatarProps {
-    size?: number;
-}
-
-const ProfileAvatar = ({ size = 56 }: ProfileAvatarProps) => (
+const ProfileAvatar = () => (
     <a
         className="profile-avatar-link"
-        href="https://github.com/theslopbot"
+        href={GITHUB_PROFILE_URL}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="TheSlopBot on GitHub"
-        style={{ '--avatar-size': `${size}px` } as CSSProperties}
     >
         <img
             className="profile-avatar-link__image"

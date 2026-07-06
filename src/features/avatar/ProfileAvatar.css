@@ -1,22 +1,23 @@
 .profile-avatar-link {
-    --avatar-size: 56px;
     --avatar-border: 2px;
 
     flex-shrink: 0;
     display: block;
     width: calc(var(--avatar-size) + 2 * var(--avatar-border));
     height: calc(var(--avatar-size) + 2 * var(--avatar-border));
-    border: var(--avatar-border) solid rgba(122, 132, 156, 0.45);
+    border: var(--avatar-border) solid var(--stroke-secondary-strong);
     border-radius: 50%;
     box-sizing: border-box;
     overflow: hidden;
     text-decoration: none;
     line-height: 0;
-    transition: border-color 0.15s ease;
+    transition:
+        border-color var(--transition-fast),
+        opacity var(--transition-fast);
 }
 
 .profile-avatar-link:hover {
-    border-color: rgba(232, 237, 247, 0.7);
+    border-color: var(--stroke-primary-soft);
 }
 
 .profile-avatar-link:active {

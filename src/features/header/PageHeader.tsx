@@ -1,3 +1,4 @@
+import { GITHUB_PROFILE_URL } from '../../constants/links';
 import ProfileAvatar from '../avatar/ProfileAvatar';
 import ThinkingIndicator from '../thinking/ThinkingIndicator';
 import './PageHeader.css';
@@ -12,14 +13,14 @@ const PageHeader = () => (
             <h2 className="page-header__subtitle">
                 <a
                     className="page-header__link"
-                    href="https://github.com/TheSlopBot"
+                    href={GITHUB_PROFILE_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                 >
                     github.com/TheSlopBot
                 </a>
             </h2>
-            <ProfileAvatar size={44} />
+            <ProfileAvatar />
         </div>
     </header>
 );

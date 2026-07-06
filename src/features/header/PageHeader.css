@@ -1,8 +1,4 @@
 .page-header {
-    --header-title-size: clamp(1.375rem, 3.2vw, 1.75rem);
-    --header-muted-size: calc(var(--header-title-size) * 0.58);
-    --header-brand-gap: calc(0.55em + 1rem);
-
     position: relative;
     z-index: 2;
     isolation: isolate;
@@ -22,8 +18,8 @@
     height: calc(100% + 32px);
     background: linear-gradient(
         180deg,
-        rgb(8 12 24 / 1.0) 0%,
-        rgb(8 12 24 / 0.4) calc(100% - 32px),
+        var(--bg-deep-solid) 0%,
+        var(--bg-deep-40) calc(100% - 32px),
         transparent 100%
     );
     z-index: -1;
@@ -33,13 +29,13 @@
 .page-header__brand {
     display: flex;
     align-items: center;
-    gap: var(--header-brand-gap);
+    gap: var(--brand-gap);
 }
 
 .page-header__title {
     margin: 0;
     font-family: var(--font-header);
-    font-size: var(--header-title-size);
+    font-size: var(--text-title-size);
     font-weight: 600;
     line-height: 1;
     letter-spacing: 0.14em;
@@ -63,12 +59,14 @@
 
 .page-header__link {
     font-family: var(--font-mono);
-    font-size: var(--header-muted-size);
+    font-size: var(--text-header-muted-size);
     font-weight: 400;
     letter-spacing: 0.08em;
     color: var(--text-muted);
     text-decoration: none;
-    transition: color 0.15s ease;
+    transition:
+        color var(--transition-fast),
+        opacity var(--transition-fast);
 }
 
 .page-header__link:hover {

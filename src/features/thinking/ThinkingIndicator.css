@@ -1,13 +1,13 @@
 .thinking-indicator-group {
     display: inline-flex;
     align-items: center;
-    gap: var(--header-brand-gap);
+    gap: var(--brand-gap);
 }
 
 .thinking-indicator-group__label {
     margin: 0;
     font-family: var(--font-mono);
-    font-size: var(--header-muted-size);
+    font-size: var(--text-header-muted-size);
     font-weight: 400;
     letter-spacing: 0.08em;
     text-transform: lowercase;
@@ -18,8 +18,6 @@
     --indicator-size: 14px;
     --indicator-depth: calc(var(--indicator-size) / 2);
     --indicator-border: 1px;
-    --indicator-face: rgba(46, 91, 255, 0.12);
-    --indicator-stroke: rgba(122, 132, 156, 0.42);
 
     position: relative;
     display: inline-block;
@@ -37,8 +35,8 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    border: var(--indicator-border) solid var(--indicator-stroke);
-    background-color: var(--indicator-face);
+    border: var(--indicator-border) solid var(--stroke-secondary-muted);
+    background-color: var(--surface-accent);
 }
 
 .thinking-indicator__face:nth-of-type(1) {

@@ -4,12 +4,10 @@ import {
     DENSITY,
     readBokehTheme,
     themeToGlColors,
-    type BokehTheme,
     type GlThemeColors,
 } from './asciiBokeh';
 import { FRAGMENT_SHADER, VERTEX_SHADER } from './asciiBokehShaders';
 
-// Single oversized triangle — no internal diagonal edge.
 const FULLSCREEN_TRIANGLE = new Float32Array([
     -1, -1,
     3, -1,
@@ -63,7 +61,7 @@ const createProgram = (gl: WebGLRenderingContext): WebGLProgram => {
     return program;
 };
 
-const createGlyphAtlas = (font: string): HTMLCanvasElement => {
+const createGlyphAtlas = (font: string, fillColor: string): HTMLCanvasElement => {
     const glyphW = 18;
     const glyphH = 22;
     const atlas = document.createElement('canvas');
@@ -77,7 +75,7 @@ const createGlyphAtlas = (font: string): HTMLCanvasElement => {
     }
 
     ctx.clearRect(0, 0, atlas.width, atlas.height);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = fillColor;
     ctx.font = `${glyphH - 2}px ${font}`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
@@ -89,9 +87,21 @@ const createGlyphAtlas = (font: string): HTMLCanvasElement => {
     return atlas;
 };
 
+const destroyGlResources = (
+    gl: WebGLRenderingContext,
+    resources: {
+        program: WebGLProgram;
+        positionBuffer: WebGLBuffer | null;
+        glyphTexture: WebGLTexture | null;
+    },
+): void => {
+    if (resources.glyphTexture) gl.deleteTexture(resources.glyphTexture);
+    if (resources.positionBuffer) gl.deleteBuffer(resources.positionBuffer);
+    gl.deleteProgram(resources.program);
+};
+
 export interface AsciiBokehRenderer {
     resize(cssWidth: number, cssHeight: number, dpr: number): void;
-    setTheme(theme: BokehTheme): void;
     draw(time: number): void;
     destroy(): void;
 }
@@ -112,10 +122,12 @@ export const createAsciiBokehRenderer = (
 
     const program = createProgram(gl);
     const positionBuffer = gl.createBuffer();
-    const glyphAtlasCanvas = createGlyphAtlas(readBokehTheme().fontMono);
+    const initialTheme = readBokehTheme();
+    const glyphAtlasCanvas = createGlyphAtlas(initialTheme.fontMono, initialTheme.glyphAtlas);
     const glyphTexture = gl.createTexture();
 
     if (!positionBuffer || !glyphTexture) {
+        destroyGlResources(gl, { program, positionBuffer, glyphTexture });
         return null;
     }
 
@@ -151,12 +163,15 @@ export const createAsciiBokehRenderer = (
         accentCyan: gl.getUniformLocation(program, 'u_accentCyan'),
         accentBlue: gl.getUniformLocation(program, 'u_accentBlue'),
         accentPrimary: gl.getUniformLocation(program, 'u_accentPrimary'),
+        accentGreen: gl.getUniformLocation(program, 'u_accentGreen'),
+        accentPurple: gl.getUniformLocation(program, 'u_accentPurple'),
+        accentOrange: gl.getUniformLocation(program, 'u_accentOrange'),
         glyphAtlas: gl.getUniformLocation(program, 'u_glyphAtlas'),
     };
 
     let cssWidth = 0;
     let cssHeight = 0;
-    let themeColors: GlThemeColors = themeToGlColors(readBokehTheme());
+    let themeColors: GlThemeColors = themeToGlColors(initialTheme);
 
     const applyTheme = (colors: GlThemeColors) => {
         gl.useProgram(program);
@@ -165,6 +180,9 @@ export const createAsciiBokehRenderer = (
         gl.uniform3fv(uniforms.accentCyan, colors.accentCyan);
         gl.uniform3fv(uniforms.accentBlue, colors.accentBlue);
         gl.uniform3fv(uniforms.accentPrimary, colors.accentPrimary);
+        gl.uniform3fv(uniforms.accentGreen, colors.accentGreen);
+        gl.uniform3fv(uniforms.accentPurple, colors.accentPurple);
+        gl.uniform3fv(uniforms.accentOrange, colors.accentOrange);
     };
 
     applyTheme(themeColors);
@@ -190,11 +208,6 @@ export const createAsciiBokehRenderer = (
             applyTheme(themeColors);
         },
 
-        setTheme(theme) {
-            themeColors = themeToGlColors(theme);
-            applyTheme(themeColors);
-        },
-
         draw(time) {
             if (cssWidth === 0 || cssHeight === 0) return;
 
@@ -211,9 +224,7 @@ export const createAsciiBokehRenderer = (
         },
 
         destroy() {
-            gl.deleteTexture(glyphTexture);
-            gl.deleteBuffer(positionBuffer);
-            gl.deleteProgram(program);
+            destroyGlResources(gl, { program, positionBuffer, glyphTexture });
         },
     };
 };

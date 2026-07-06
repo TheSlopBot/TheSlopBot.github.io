@@ -19,14 +19,13 @@ uniform vec3 u_textMuted;
 uniform vec3 u_accentCyan;
 uniform vec3 u_accentBlue;
 uniform vec3 u_accentPrimary;
+uniform vec3 u_accentGreen;
+uniform vec3 u_accentPurple;
+uniform vec3 u_accentOrange;
 uniform sampler2D u_glyphAtlas;
 
 const float TIME_SCALE = 0.32;
 const float BLOB_SPREAD = 0.038;
-
-const vec3 ACCENT_GREEN  = vec3(0.04, 0.82, 0.48);
-const vec3 ACCENT_PURPLE = vec3(0.82, 0.22, 0.92);
-const vec3 ACCENT_ORANGE = vec3(0.92, 0.50, 0.08);
 
 vec3 saturateColor(vec3 c, float amount) {
     float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
@@ -96,10 +95,10 @@ vec3 bokehColor(vec2 p, float t, float intensity) {
     float phaseD = sin(p.x * 10.0 - p.y * 6.0 + t * 0.18 + 1.3) * 0.5 + 0.5;
 
     float accent = smoothstep(0.1, 0.9, bright);
-    col = mix(col, ACCENT_GREEN,  phaseA * accent * 0.38);
+    col = mix(col, u_accentGreen,  phaseA * accent * 0.38);
     col = mix(col, u_accentBlue,  phaseB * accent * 0.34);
-    col = mix(col, ACCENT_PURPLE, smoothstep(0.25, 0.95, phaseC) * accent * 0.58);
-    col = mix(col, ACCENT_ORANGE, smoothstep(0.25, 0.95, phaseD) * accent * 0.54);
+    col = mix(col, u_accentPurple, smoothstep(0.25, 0.95, phaseC) * accent * 0.58);
+    col = mix(col, u_accentOrange, smoothstep(0.25, 0.95, phaseD) * accent * 0.54);
 
     col = saturateColor(col, 1.32);
     col = contrastColor(col, 1.16);
