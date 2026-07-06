@@ -1,0 +1,91 @@
+.thinking-indicator-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--header-brand-gap);
+}
+
+.thinking-indicator-group__label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--header-muted-size);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+    color: var(--text-muted);
+}
+
+.thinking-indicator {
+    --indicator-size: 14px;
+    --indicator-depth: calc(var(--indicator-size) / 2);
+    --indicator-border: 1px;
+    --indicator-face: rgba(46, 91, 255, 0.12);
+    --indicator-stroke: rgba(122, 132, 156, 0.42);
+
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--indicator-size);
+    height: var(--indicator-size);
+    vertical-align: middle;
+    transform-style: preserve-3d;
+    animation: thinking-indicator-spin 5s infinite ease;
+    will-change: transform;
+}
+
+.thinking-indicator__face {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: var(--indicator-border) solid var(--indicator-stroke);
+    background-color: var(--indicator-face);
+}
+
+.thinking-indicator__face:nth-of-type(1) {
+    transform: translateZ(calc(-1 * var(--indicator-depth))) rotateY(180deg);
+}
+
+.thinking-indicator__face:nth-of-type(2) {
+    transform: rotateY(-270deg) translateX(50%);
+    transform-origin: top right;
+}
+
+.thinking-indicator__face:nth-of-type(3) {
+    transform: rotateY(270deg) translateX(-50%);
+    transform-origin: center left;
+}
+
+.thinking-indicator__face:nth-of-type(4) {
+    transform: rotateX(90deg) translateY(-50%);
+    transform-origin: top center;
+}
+
+.thinking-indicator__face:nth-of-type(5) {
+    transform: rotateX(-90deg) translateY(50%);
+    transform-origin: bottom center;
+}
+
+.thinking-indicator__face:nth-of-type(6) {
+    transform: translateZ(var(--indicator-depth));
+}
+
+@keyframes thinking-indicator-spin {
+    0% {
+        transform: rotate(45deg) rotateX(-25deg) rotateY(25deg);
+    }
+
+    50% {
+        transform: rotate(45deg) rotateX(-385deg) rotateY(25deg);
+    }
+
+    100% {
+        transform: rotate(45deg) rotateX(-385deg) rotateY(385deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .thinking-indicator {
+        animation: none;
+        transform: rotate(45deg) rotateX(-25deg) rotateY(25deg);
+    }
+}

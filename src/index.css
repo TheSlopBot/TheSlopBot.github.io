@@ -5,7 +5,8 @@
   --text-primary: #e8edf7;
   --text-muted: #7a849c;
   --stroke-secondary: rgba(122, 132, 156, 0.4);
-  --header-scrim-opacity: 0.32;
+  --font-display: "Orbitron", "Rajdhani", "Segoe UI", sans-serif;
+  --font-header: "Rajdhani", "Orbitron", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, monospace;
 }
 
@@ -34,7 +35,7 @@ body,
 }
 
 body {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
