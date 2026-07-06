@@ -1,3 +1,7 @@
+import { SCENE_LAYOUT } from './asciiBokeh';
+
+const { width: sceneWidth, height: sceneHeight, cellWidth, cellHeight } = SCENE_LAYOUT;
+
 export const VERTEX_SHADER = /* glsl */ `
 attribute vec2 a_position;
 
@@ -12,7 +16,6 @@ precision highp float;
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform float u_dpr;
-uniform vec2 u_cellSize;
 uniform float u_glyphCount;
 uniform vec3 u_bgDeep;
 uniform vec3 u_textMuted;
@@ -24,8 +27,11 @@ uniform vec3 u_accentPurple;
 uniform vec3 u_accentOrange;
 uniform sampler2D u_glyphAtlas;
 
+const vec2 SCENE_SIZE = vec2(${sceneWidth}.0, ${sceneHeight}.0);
+const vec2 CELL_SIZE = vec2(${cellWidth}.0, ${cellHeight}.0);
 const float TIME_SCALE = 0.32;
 const float BLOB_SPREAD = 0.038;
+const float BG_DIM = 0.92;
 
 vec3 saturateColor(vec3 c, float amount) {
     float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
@@ -34,6 +40,13 @@ vec3 saturateColor(vec3 c, float amount) {
 
 vec3 contrastColor(vec3 c, float amount) {
     return clamp((c - 0.5) * amount + 0.5, 0.0, 1.0);
+}
+
+vec2 mapToSceneCoord(vec2 fragCoord) {
+    vec2 viewportScale = u_resolution / SCENE_SIZE;
+    float coverScale = max(viewportScale.x, viewportScale.y);
+    vec2 centeredOffset = (SCENE_SIZE * coverScale - u_resolution) * 0.5;
+    return (fragCoord + centeredOffset) / coverScale;
 }
 
 float bokehIntensity(vec2 p, float t) {
@@ -109,26 +122,27 @@ vec3 bokehColor(vec2 p, float t, float intensity) {
 void main() {
     vec2 fragCoord = gl_FragCoord.xy / u_dpr;
     fragCoord.y = u_resolution.y - fragCoord.y;
-    vec2 grid = u_resolution / u_cellSize;
-    vec2 cell = floor(fragCoord / u_cellSize);
-    vec2 cellUV = fract(fragCoord / u_cellSize);
+    vec2 sceneCoord = mapToSceneCoord(fragCoord);
+    vec3 bg = u_bgDeep * BG_DIM;
 
+    if (any(lessThan(sceneCoord, vec2(0.0))) || any(greaterThanEqual(sceneCoord, SCENE_SIZE))) {
+        gl_FragColor = vec4(bg, 1.0);
+        return;
+    }
+
+    vec2 grid = SCENE_SIZE / CELL_SIZE;
+    vec2 cell = floor(sceneCoord / CELL_SIZE);
+    vec2 cellUV = fract(sceneCoord / CELL_SIZE);
     vec2 norm = (cell + 0.5) / grid;
     float intensity = bokehIntensity(norm, u_time);
-
     float adjusted = min(1.0, 0.12 + intensity * 0.88);
     float variety = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
     float idx = floor(clamp(adjusted * (u_glyphCount - 1.0) + variety * 2.5, 0.0, u_glyphCount - 1.0));
-
     float glyphU = (idx + cellUV.x) / u_glyphCount;
     float glyphAlpha = texture2D(u_glyphAtlas, vec2(glyphU, cellUV.y)).a;
-
-    vec3 bg = u_bgDeep * 0.92;
-
     vec3 glyphColor = bokehColor(norm, u_time, intensity);
     float alpha = pow(intensity, 0.82) * 0.78 + 0.18;
-    vec3 color = mix(bg, glyphColor, glyphAlpha * alpha);
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(mix(bg, glyphColor, glyphAlpha * alpha), 1.0);
 }
 `;

@@ -1,6 +1,4 @@
 import {
-    CELL_H,
-    CELL_W,
     DENSITY,
     readBokehTheme,
     themeToGlColors,
@@ -13,6 +11,9 @@ const FULLSCREEN_TRIANGLE = new Float32Array([
     3, -1,
     -1, 3,
 ]);
+
+const GLYPH_WIDTH = 18;
+const GLYPH_HEIGHT = 22;
 
 const compileShader = (
     gl: WebGLRenderingContext,
@@ -62,11 +63,9 @@ const createProgram = (gl: WebGLRenderingContext): WebGLProgram => {
 };
 
 const createGlyphAtlas = (font: string, fillColor: string): HTMLCanvasElement => {
-    const glyphW = 18;
-    const glyphH = 22;
     const atlas = document.createElement('canvas');
-    atlas.width = DENSITY.length * glyphW;
-    atlas.height = glyphH;
+    atlas.width = DENSITY.length * GLYPH_WIDTH;
+    atlas.height = GLYPH_HEIGHT;
 
     const ctx = atlas.getContext('2d');
 
@@ -76,12 +75,12 @@ const createGlyphAtlas = (font: string, fillColor: string): HTMLCanvasElement =>
 
     ctx.clearRect(0, 0, atlas.width, atlas.height);
     ctx.fillStyle = fillColor;
-    ctx.font = `${glyphH - 2}px ${font}`;
+    ctx.font = `${GLYPH_HEIGHT - 2}px ${font}`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
 
     for (let i = 0; i < DENSITY.length; i += 1) {
-        ctx.fillText(DENSITY[i] ?? '.', i * glyphW + glyphW / 2, glyphH / 2);
+        ctx.fillText(DENSITY[i] ?? '.', i * GLYPH_WIDTH + GLYPH_WIDTH / 2, GLYPH_HEIGHT / 2);
     }
 
     return atlas;
@@ -109,6 +108,8 @@ export interface AsciiBokehRenderer {
 export const createAsciiBokehRenderer = (
     canvas: HTMLCanvasElement,
 ): AsciiBokehRenderer | null => {
+    if (!canvas) throw new Error('canvas is not defined');
+
     const gl = canvas.getContext('webgl', {
         alpha: false,
         antialias: false,
@@ -122,8 +123,8 @@ export const createAsciiBokehRenderer = (
 
     const program = createProgram(gl);
     const positionBuffer = gl.createBuffer();
-    const initialTheme = readBokehTheme();
-    const glyphAtlasCanvas = createGlyphAtlas(initialTheme.fontMono, initialTheme.glyphAtlas);
+    const theme = readBokehTheme();
+    const glyphAtlasCanvas = createGlyphAtlas(theme.fontMono, theme.glyphAtlas);
     const glyphTexture = gl.createTexture();
 
     if (!positionBuffer || !glyphTexture) {
@@ -156,7 +157,6 @@ export const createAsciiBokehRenderer = (
         time: gl.getUniformLocation(program, 'u_time'),
         resolution: gl.getUniformLocation(program, 'u_resolution'),
         dpr: gl.getUniformLocation(program, 'u_dpr'),
-        cellSize: gl.getUniformLocation(program, 'u_cellSize'),
         glyphCount: gl.getUniformLocation(program, 'u_glyphCount'),
         bgDeep: gl.getUniformLocation(program, 'u_bgDeep'),
         textMuted: gl.getUniformLocation(program, 'u_textMuted'),
@@ -169,12 +169,7 @@ export const createAsciiBokehRenderer = (
         glyphAtlas: gl.getUniformLocation(program, 'u_glyphAtlas'),
     };
 
-    let cssWidth = 0;
-    let cssHeight = 0;
-    let themeColors: GlThemeColors = themeToGlColors(initialTheme);
-
     const applyTheme = (colors: GlThemeColors) => {
-        gl.useProgram(program);
         gl.uniform3fv(uniforms.bgDeep, colors.bgDeep);
         gl.uniform3fv(uniforms.textMuted, colors.textMuted);
         gl.uniform3fv(uniforms.accentCyan, colors.accentCyan);
@@ -185,11 +180,12 @@ export const createAsciiBokehRenderer = (
         gl.uniform3fv(uniforms.accentOrange, colors.accentOrange);
     };
 
-    applyTheme(themeColors);
+    let cssWidth = 0;
+    let cssHeight = 0;
 
     gl.useProgram(program);
+    applyTheme(themeToGlColors(theme));
     gl.uniform1f(uniforms.glyphCount, DENSITY.length);
-    gl.uniform2f(uniforms.cellSize, CELL_W, CELL_H);
     gl.uniform1i(uniforms.glyphAtlas, 0);
 
     return {
@@ -201,11 +197,8 @@ export const createAsciiBokehRenderer = (
             canvas.style.width = `${width}px`;
             canvas.style.height = `${height}px`;
             gl.viewport(0, 0, canvas.width, canvas.height);
-            gl.useProgram(program);
             gl.uniform2f(uniforms.resolution, width, height);
             gl.uniform1f(uniforms.dpr, dpr);
-            themeColors = themeToGlColors(readBokehTheme());
-            applyTheme(themeColors);
         },
 
         draw(time) {

@@ -1,8 +1,13 @@
 import { THEME_TOKEN_DEFAULTS, type ThemeTokenName } from '../../theme/tokens';
 
 export const DENSITY = ' .,:;\'~-!iIl|/\\()[]{}?><+=*czsxtneraohgpmdwqkuvybCQMZW@#&$%';
-export const CELL_W = 12;
-export const CELL_H = 16;
+
+export const SCENE_LAYOUT = {
+    width: 2560,
+    height: 1440,
+    cellWidth: 12,
+    cellHeight: 16,
+} as const;
 
 const BOKEH_TOKEN_NAMES = [
     '--bg-deep',
